@@ -8,6 +8,15 @@ void main() async {
   await Firebase.initializeApp(); // <- Initialize Firebase
   runApp(MyApp());
 }
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  final user = FirebaseAuth.instance.currentUser;
+
+  runApp(MaterialApp(
+    home: user != null ? LoggedInHomePage() : LoginPage(),
+  ));
+}
 
 class MyApp extends StatelessWidget {
   @override
