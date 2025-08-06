@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -7,15 +8,25 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
 
-  void _login() {
+  Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      // Simulate login logic
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login Successful')),
-      );
+      try {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _email.text,
+          password: _password.text,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login successful')),
+        );
+        // Navigate to home or dashboard
+      } on FirebaseAuthException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? 'Login failed')),
+        );
+      }
     }
   }
 
@@ -27,34 +38,25 @@ class _LoginPageState extends State<LoginPage> {
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Enter your email' : null,
-              ),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: InputDecoration(labelText: 'Password'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Enter your password' : null,
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _login,
-                child: Text('Login'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/register');
-                },
-                child: Text('Don\'t have an account? Register here'),
-              ),
-            ],
-          ),
+          child: Column(children: [
+            TextFormField(
+              controller: _email,
+              decoration: InputDecoration(labelText: 'Email'),
+              validator: (val) => val!.isEmpty ? 'Enter email' : null,
+            ),
+            TextFormField(
+              controller: _password,
+              decoration: InputDecoration(labelText: 'Password'),
+              obscureText: true,
+              validator: (val) => val!.length < 6 ? 'Minimum 6 chars' : null,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(onPressed: _login, child: Text('Login')),
+            TextButton(
+              onPressed: () => Navigator.pushNamed(context, '/register'),
+              child: Text('No account? Register'),
+            )
+          ]),
         ),
       ),
     );
